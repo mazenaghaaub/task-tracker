@@ -151,6 +151,50 @@ def test_patch_same_status_returns_422(client, created_task):
     assert "Invalid status transition from ToDo to ToDo" in response.json()["detail"]
 
 
+def test_patch_valid_transition_inprogress_to_done_returns_200(client):
+    create_response = client.post(
+        "/tasks",
+        json={
+            "title": "In progress task",
+            "description": "Transition to done",
+            "status": "InProgress",
+            "priority": "High",
+            "assignee": "Maya",
+        },
+    )
+    task = create_response.json()
+
+    response = client.patch(
+        f"/tasks/{task['id']}",
+        json={"status": "Done"},
+    )
+
+    assert response.status_code == 200
+    assert response.json()["status"] == "Done"
+
+
+def test_patch_invalid_transition_done_to_todo_returns_422(client):
+    create_response = client.post(
+        "/tasks",
+        json={
+            "title": "Completed task",
+            "description": "Transition back to todo",
+            "status": "Done",
+            "priority": "High",
+            "assignee": "Maya",
+        },
+    )
+    task = create_response.json()
+
+    response = client.patch(
+        f"/tasks/{task['id']}",
+        json={"status": "ToDo"},
+    )
+
+    assert response.status_code == 422
+    assert "Invalid status transition from Done to ToDo" in response.json()["detail"]
+
+
 def test_delete_existing_returns_204_no_body(client, created_task):
     response = client.delete(f"/tasks/{created_task['id']}")
 

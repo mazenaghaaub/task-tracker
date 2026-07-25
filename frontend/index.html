@@ -105,6 +105,12 @@
         margin-bottom: 12px;
         box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
         cursor: grab;
+        transition: border-color 0.2s ease, transform 0.15s ease;
+      }
+
+      .task-card:hover {
+        border-color: rgba(37, 99, 235, 0.35);
+        transform: translateY(-1px);
       }
 
       .task-card.dragging {
@@ -114,6 +120,48 @@
       .column.drag-over {
         outline: 2px dashed var(--accent);
         outline-offset: 2px;
+      }
+
+      .column[data-status="ToDo"] {
+        border-color: #f59e0b;
+        background: #fffbeb;
+      }
+
+      .column[data-status="InProgress"] {
+        border-color: #3b82f6;
+        background: #eff6ff;
+      }
+
+      .column[data-status="Done"] {
+        border-color: #10b981;
+        background: #ecfdf5;
+      }
+
+      .column[data-status="ToDo"] .column-count {
+        background: #fef3c7;
+        color: #92400e;
+      }
+
+      .column[data-status="InProgress"] .column-count {
+        background: #dbeafe;
+        color: #1e40af;
+      }
+
+      .column[data-status="Done"] .column-count {
+        background: #d1fae5;
+        color: #065f46;
+      }
+
+      .task-card .meta .pill:first-child {
+        background: #e0f2fe;
+        border-color: #bfdbfe;
+        color: #1d4ed8;
+      }
+
+      .task-card .meta .pill:last-child {
+        background: #f8fafc;
+        border-color: #e5e7eb;
+        color: #475569;
       }
 
       .task-card h3 {
@@ -559,11 +607,18 @@
         const payload = {
           title,
           description: taskDescriptionInput.value || "",
-          status: taskStatusInput.value,
           priority: taskPriorityInput.value,
           assignee: assignee ? assignee : null,
         };
         const isEditMode = modalMode === "edit" && taskIdInput.value;
+        if (!isEditMode) {
+          payload.status = taskStatusInput.value;
+        } else {
+          const existingTask = tasks.find((task) => String(task.id) === String(taskIdInput.value));
+          if (existingTask && existingTask.status !== taskStatusInput.value) {
+            payload.status = taskStatusInput.value;
+          }
+        }
         const url = isEditMode
           ? `${API_BASE_URL}/tasks/${encodeURIComponent(taskIdInput.value)}`
           : `${API_BASE_URL}/tasks`;
