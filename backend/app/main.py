@@ -1,11 +1,16 @@
 from datetime import datetime, timezone
+from pathlib import Path
 
 from fastapi import FastAPI, HTTPException, status
+from fastapi.responses import FileResponse
 
 from app import storage
 from app.business_rules import validate_status_transition
 from app.models import TaskPriority, TaskResponse, TaskStatus, TaskUpdate
 from app.routes import router
+
+FRONTEND_DIR = Path(__file__).resolve().parents[2] / "frontend"
+INDEX_HTML = FRONTEND_DIR / "index.html"
 
 app = FastAPI(
     title="Task Tracker API",
@@ -14,6 +19,12 @@ app = FastAPI(
 )
 
 app.include_router(router)
+
+
+@app.get("/", include_in_schema=False)
+@app.get("/index.html", include_in_schema=False)
+def serve_index() -> FileResponse:
+    return FileResponse(INDEX_HTML)
 
 
 @app.get("/tasks", response_model=list[TaskResponse], tags=["tasks"])
