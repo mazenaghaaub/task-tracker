@@ -27,3 +27,6 @@ uvicorn app.main:app --reload --port 8000
 
 #check from broswer
 http://localhost:8000/index.html
+
+#run tests
+python -m pytest -q tests/test_tasks.py                                     
