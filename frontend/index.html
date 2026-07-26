@@ -212,6 +212,34 @@
         opacity: 0.9;
       }
 
+      .toolbar {
+        align-items: center;
+        display: flex;
+        justify-content: flex-end;
+        margin: -8px 0 16px;
+      }
+
+      .filter-toggle {
+        align-items: center;
+        color: var(--muted);
+        display: inline-flex;
+        gap: 8px;
+        font-size: 0.9rem;
+        font-weight: 700;
+      }
+
+      .filter-toggle input {
+        accent-color: var(--accent);
+        height: 16px;
+        width: 16px;
+      }
+
+      .pill.overdue {
+        background: #fee2e2;
+        border-color: #fca5a5;
+        color: #991b1b;
+      }
+
       .modal-overlay {
         align-items: center;
         background: rgba(15, 23, 42, 0.5);
@@ -330,6 +358,10 @@
           display: block;
         }
 
+        .toolbar {
+          justify-content: flex-start;
+        }
+
         .primary-btn {
           margin-top: 16px;
         }
@@ -349,6 +381,13 @@
         </div>
         <button class="primary-btn" id="new-task-btn" type="button">New Task</button>
       </header>
+
+      <section class="toolbar" aria-label="Task filters">
+        <label class="filter-toggle" for="overdue-filter">
+          <input id="overdue-filter" type="checkbox" />
+          Overdue only
+        </label>
+      </section>
 
       <section class="board" aria-label="Kanban board">
         <article class="column" data-status="ToDo">
@@ -465,6 +504,11 @@
             <input id="task-assignee" name="assignee" type="text" autocomplete="off" />
           </div>
 
+          <div class="form-row">
+            <label for="task-due-date">Due date</label>
+            <input id="task-due-date" name="due_date" type="date" />
+          </div>
+
           <div class="form-actions">
             <button class="secondary-btn" id="task-modal-cancel" type="button">Cancel</button>
             <button class="primary-btn" type="submit">Save</button>
@@ -501,6 +545,8 @@
       const taskStatusInput = document.querySelector("#task-status");
       const taskPriorityInput = document.querySelector("#task-priority");
       const taskAssigneeInput = document.querySelector("#task-assignee");
+      const taskDueDateInput = document.querySelector("#task-due-date");
+      const overdueFilterInput = document.querySelector("#overdue-filter");
       const taskFormError = document.querySelector("#task-form-error");
       const taskTitleError = document.querySelector("#task-title-error");
       const boardStateMessage = document.createElement("div");
@@ -553,6 +599,7 @@
         taskStatusInput.value = task.status || "ToDo";
         taskPriorityInput.value = task.priority || "Medium";
         taskAssigneeInput.value = task.assignee || "";
+        taskDueDateInput.value = task.due_date || "";
         taskModalTitle.textContent = "Edit Task";
         taskModalOverlay.hidden = false;
         taskTitleInput.focus();
@@ -609,6 +656,7 @@
           description: taskDescriptionInput.value || "",
           priority: taskPriorityInput.value,
           assignee: assignee ? assignee : null,
+          due_date: taskDueDateInput.value || null,
         };
         const isEditMode = modalMode === "edit" && taskIdInput.value;
         if (!isEditMode) {
@@ -662,6 +710,8 @@
           closeTaskModal();
         }
       });
+
+      overdueFilterInput.addEventListener("change", fetchTasks);
 
       function escapeHtml(value) {
         return String(value ?? "").replace(/[&<>"']/g, (char) => {
@@ -737,6 +787,18 @@
         }
 
         return fallback;
+      }
+
+      function buildTasksUrl() {
+        const url = new URL(`${API_BASE_URL}/tasks`);
+        if (overdueFilterInput.checked) {
+          url.searchParams.set("overdue", "true");
+        }
+        return url.toString();
+      }
+
+      function formatDueDate(value) {
+        return value ? `Due: ${value}` : "";
       }
 
       function sortTasksForColumn(taskList) {
@@ -908,17 +970,28 @@
 
           taskListContainer.innerHTML = matchingTasks
             .map(
-              (task) => `
+              (task) => {
+                const dueDatePill = task.due_date
+                  ? `<span class="pill">${escapeHtml(formatDueDate(task.due_date))}</span>`
+                  : "";
+                const overduePill = task.is_overdue
+                  ? `<span class="pill overdue">Overdue</span>`
+                  : "";
+
+                return `
                 <div class="task-card" data-task-id="${escapeHtml(task.id)}">
                   <h3>${escapeHtml(task.title)}</h3>
                   <p>${escapeHtml(task.description || "")}</p>
                   <div class="meta">
                     <span class="pill">Priority: ${escapeHtml(task.priority)}</span>
                     <span class="pill">Assignee: ${escapeHtml(task.assignee || "Unassigned")}</span>
+                    ${dueDatePill}
+                    ${overduePill}
                   </div>
                   <button class="edit-btn" type="button">Edit</button>
                 </div>
-              `
+              `;
+              }
             )
             .join("");
         });
@@ -931,7 +1004,7 @@
         renderBoard([]);
 
         try {
-          const response = await fetch(`${API_BASE_URL}/tasks`);
+          const response = await fetch(buildTasksUrl());
           if (!response.ok) {
             throw new Error(`Request failed with status ${response.status}`);
           }
@@ -951,4 +1024,3 @@
     </script>
   </body>
 </html>
-

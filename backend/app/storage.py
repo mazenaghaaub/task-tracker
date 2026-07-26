@@ -1,10 +1,20 @@
-from datetime import datetime, timezone
+from datetime import date, datetime, timezone
 from typing import Optional
 from uuid import uuid4
 
 from app.models import TaskCreate, TaskPriority, TaskResponse, TaskStatus, TaskUpdate
 
 _tasks: dict[str, TaskResponse] = {}
+
+
+def _is_overdue(due_date: Optional[date]) -> bool:
+    if due_date is None:
+        return False
+    return due_date < date.today()
+
+
+def _serialize_task(task: TaskResponse) -> TaskResponse:
+    return task.model_copy(update={"is_overdue": _is_overdue(task.due_date)})
 
 
 def add_task(payload: TaskCreate) -> TaskResponse:
@@ -17,6 +27,8 @@ def add_task(payload: TaskCreate) -> TaskResponse:
         status=payload.status,
         priority=payload.priority,
         assignee=payload.assignee,
+        due_date=payload.due_date,
+        is_overdue=_is_overdue(payload.due_date),
         created_at=now,
         updated_at=now,
     )
@@ -27,17 +39,23 @@ def add_task(payload: TaskCreate) -> TaskResponse:
 def get_all_tasks(
     status: Optional[TaskStatus] = None,
     priority: Optional[TaskPriority] = None,
+    overdue: Optional[bool] = None,
 ) -> list[TaskResponse]:
     tasks = list(_tasks.values())
     if status is not None:
         tasks = [t for t in tasks if t.status == status]
     if priority is not None:
         tasks = [t for t in tasks if t.priority == priority]
-    return tasks
+    if overdue is not None:
+        tasks = [t for t in tasks if _is_overdue(t.due_date) is overdue]
+    return [_serialize_task(task) for task in tasks]
 
 
 def get_task_by_id(task_id: str) -> Optional[TaskResponse]:
-    return _tasks.get(task_id)
+    task = _tasks.get(task_id)
+    if task is None:
+        return None
+    return _serialize_task(task)
 
 
 def update_task(task_id: str, payload: TaskUpdate) -> Optional[TaskResponse]:
@@ -47,7 +65,7 @@ def update_task(task_id: str, payload: TaskUpdate) -> Optional[TaskResponse]:
 
     updates = payload.model_dump(exclude_unset=True)
     if not updates:
-        return task
+        return _serialize_task(task)
 
     updated = task.model_copy(
         update={
@@ -55,6 +73,7 @@ def update_task(task_id: str, payload: TaskUpdate) -> Optional[TaskResponse]:
             "updated_at": datetime.now(timezone.utc),
         }
     )
+    updated = updated.model_copy(update={"is_overdue": _is_overdue(updated.due_date)})
     _tasks[task_id] = updated
     return updated
 
