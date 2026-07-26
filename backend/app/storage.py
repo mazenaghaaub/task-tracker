@@ -40,8 +40,20 @@ def get_all_tasks(
     status: Optional[TaskStatus] = None,
     priority: Optional[TaskPriority] = None,
     overdue: Optional[bool] = None,
+    search: Optional[str] = None,
 ) -> list[TaskResponse]:
     tasks = list(_tasks.values())
+
+    if search is not None:
+        search_term = search.strip().lower()
+        if search_term:
+            tasks = [
+                t
+                for t in tasks
+                if search_term in (t.title or "").lower()
+                or search_term in (t.description or "").lower()
+            ]
+
     if status is not None:
         tasks = [t for t in tasks if t.status == status]
     if priority is not None:
