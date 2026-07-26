@@ -33,17 +33,8 @@ def list_tasks(
     priority: TaskPriority | None = None,
     overdue: bool | None = None,
     search: str | None = None,
-    description: str | None = None,
-    title: str | None = None,
 ) -> list[TaskResponse]:
-    return storage.get_all_tasks(
-        status=status,
-        priority=priority,
-        overdue=overdue,
-        search=search,
-        description=description,
-        title=title,
-    )
+    return storage.get_all_tasks(status=status, priority=priority, overdue=overdue, search=search)
 
 
 @app.get("/tasks/{task_id}", response_model=TaskResponse, tags=["tasks"])

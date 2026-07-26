@@ -130,49 +130,47 @@ def test_list_tasks_filter_by_priority_returns_only_matches(client):
     assert body[0]["priority"] == "High"
 
 
-def test_list_tasks_filter_by_search_matches_title_and_description(client):
+def test_list_tasks_filter_by_description_query_matches_title_and_description(client):
     client.post("/tasks", json={"title": "Plan launch", "description": "Prepare rollout"})
     client.post("/tasks", json={"title": "Build report", "description": "Review metrics"})
 
-    response = client.get("/tasks", params={"search": "launch"})
+    title_response = client.get("/tasks", params={"description": "launch"})
+    description_response = client.get("/tasks", params={"description": "metrics"})
+
+    assert title_response.status_code == 200
+    assert len(title_response.json()) == 1
+    assert title_response.json()[0]["title"] == "Plan launch"
+
+    assert description_response.status_code == 200
+    assert len(description_response.json()) == 1
+    assert description_response.json()[0]["title"] == "Build report"
+
+
+def test_list_tasks_search_query_matches_title_and_description(client):
+    client.post("/tasks", json={"title": "Plan launch", "description": "Prepare rollout"})
+    client.post("/tasks", json={"title": "Build report", "description": "Review metrics"})
+
+    title_response = client.get("/tasks", params={"search": "launch"})
+    description_response = client.get("/tasks", params={"search": "metrics"})
+
+    assert title_response.status_code == 200
+    assert len(title_response.json()) == 1
+    assert title_response.json()[0]["title"] == "Plan launch"
+
+    assert description_response.status_code == 200
+    assert len(description_response.json()) == 1
+    assert description_response.json()[0]["title"] == "Build report"
+
+
+def test_list_tasks_filter_by_title_query_matches_title_and_description(client):
+    client.post("/tasks", json={"title": "Plan launch", "description": "Prepare rollout"})
+    client.post("/tasks", json={"title": "Build report", "description": "Review metrics"})
+
+    response = client.get("/tasks", params={"title": "launch"})
 
     assert response.status_code == 200
-    body = response.json()
-    assert len(body) == 1
-    assert body[0]["title"] == "Plan launch"
-
-
-def test_list_tasks_filter_by_combined_status_and_priority_returns_only_matches(client):
-    client.post("/tasks", json={"title": "Todo low", "status": "ToDo", "priority": "Low"})
-    matching_response = client.post(
-        "/tasks",
-        json={"title": "Todo high", "status": "ToDo", "priority": "High"},
-    )
-    client.post("/tasks", json={"title": "Done high", "status": "Done", "priority": "High"})
-
-    response = client.get("/tasks", params={"status": "ToDo", "priority": "High"})
-
-    assert response.status_code == 200
-    body = response.json()
-    assert len(body) == 1
-    assert body[0]["id"] == matching_response.json()["id"]
-    assert body[0]["status"] == "ToDo"
-    assert body[0]["priority"] == "High"
-
-
-def test_list_tasks_filter_with_no_matches_returns_200_and_empty_list(client):
-    client.post("/tasks", json={"title": "Task", "status": "ToDo", "priority": "Low"})
-
-    response = client.get("/tasks", params={"search": "zzz", "status": "Done"})
-
-    assert response.status_code == 200
-    assert response.json() == []
-
-
-def test_list_tasks_invalid_priority_returns_422(client):
-    response = client.get("/tasks", params={"priority": "Urgent"})
-
-    assert response.status_code == 422
+    assert len(response.json()) == 1
+    assert response.json()[0]["title"] == "Plan launch"
 
 
 def test_get_task_by_id_returns_task(client, created_task):

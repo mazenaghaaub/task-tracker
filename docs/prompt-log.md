@@ -20,6 +20,6 @@
 
 ## 2026-07-26
 
-1. "You are a senrio front end developer. Context: I am adding front-end support for due date feature. Requirements: check Feature 1 in mini-adr.md file. Constraints: Use the existing project architecture and keep the changes minimal. Task: Need to update the UI to add due_date and filters to tasks. Show me a summary of the changes you will make in each file with explanation. Do not write any code yet"
+1. "You are a senior front end developer. Context: I am adding front-end support for due date feature. Requirements: check Feature 1 in mini-adr.md file. Constraints: Use the existing project architecture and keep the changes minimal. Task: Need to update the UI to add due_date and filters to tasks. Show me a summary of the changes you will make in each file with explanation. Do not write any code yet"
 2. "Apply the changes and update the front end"
 3. "approve"

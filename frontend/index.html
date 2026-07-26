@@ -215,8 +215,43 @@
       .toolbar {
         align-items: center;
         display: flex;
+        gap: 10px;
         justify-content: flex-end;
         margin: -8px 0 16px;
+      }
+
+      .filter-form {
+        align-items: end;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        justify-content: flex-end;
+        width: 100%;
+      }
+
+      .filter-field {
+        display: grid;
+        gap: 4px;
+      }
+
+      .filter-field label {
+        color: var(--muted);
+        font-size: 0.8rem;
+        font-weight: 700;
+      }
+
+      .filter-field input,
+      .filter-field select {
+        border: 1px solid var(--border);
+        border-radius: 6px;
+        color: var(--text);
+        font: inherit;
+        min-height: 38px;
+        padding: 8px 10px;
+      }
+
+      .filter-field input {
+        min-width: 240px;
       }
 
       .filter-toggle {
@@ -362,6 +397,17 @@
           justify-content: flex-start;
         }
 
+        .filter-form {
+          align-items: stretch;
+          justify-content: flex-start;
+        }
+
+        .filter-field,
+        .filter-field input,
+        .filter-field select {
+          width: 100%;
+        }
+
         .primary-btn {
           margin-top: 16px;
         }
@@ -383,10 +429,46 @@
       </header>
 
       <section class="toolbar" aria-label="Task filters">
-        <label class="filter-toggle" for="overdue-filter">
-          <input id="overdue-filter" type="checkbox" />
-          Overdue only
-        </label>
+        <form class="filter-form" id="task-filter-form">
+          <div class="filter-field">
+            <label for="task-search">Search</label>
+            <input
+              id="task-search"
+              name="search"
+              type="search"
+              placeholder="Title or description"
+              autocomplete="off"
+            />
+          </div>
+
+          <div class="filter-field">
+            <label for="status-filter">Status</label>
+            <select id="status-filter" name="status">
+              <option value="">All statuses</option>
+              <option value="ToDo">To Do</option>
+              <option value="InProgress">In Progress</option>
+              <option value="Done">Done</option>
+            </select>
+          </div>
+
+          <div class="filter-field">
+            <label for="priority-filter">Priority</label>
+            <select id="priority-filter" name="priority">
+              <option value="">All priorities</option>
+              <option value="High">High</option>
+              <option value="Medium">Medium</option>
+              <option value="Low">Low</option>
+            </select>
+          </div>
+
+          <label class="filter-toggle" for="overdue-filter">
+            <input id="overdue-filter" type="checkbox" />
+            Overdue only
+          </label>
+
+          <button class="primary-btn" type="submit">Search</button>
+          <button class="secondary-btn" id="clear-filters-btn" type="button">Clear</button>
+        </form>
       </section>
 
       <section class="board" aria-label="Kanban board">
@@ -534,6 +616,11 @@
       const page = document.querySelector(".page");
       const board = document.querySelector(".board");
       const newTaskButton = document.querySelector("#new-task-btn");
+      const taskFilterForm = document.querySelector("#task-filter-form");
+      const taskSearchInput = document.querySelector("#task-search");
+      const statusFilterInput = document.querySelector("#status-filter");
+      const priorityFilterInput = document.querySelector("#priority-filter");
+      const clearFiltersButton = document.querySelector("#clear-filters-btn");
       const taskModalOverlay = document.querySelector("#task-modal-overlay");
       const taskModalCloseButton = document.querySelector("#task-modal-close");
       const taskModalCancelButton = document.querySelector("#task-modal-cancel");
@@ -711,7 +798,26 @@
         }
       });
 
+      taskFilterForm.addEventListener("submit", (event) => {
+        event.preventDefault();
+        fetchTasks();
+      });
+      taskSearchInput.addEventListener("input", () => {
+        if (!taskSearchInput.value.trim()) {
+          fetchTasks();
+        }
+      });
+      taskSearchInput.addEventListener("search", fetchTasks);
+      statusFilterInput.addEventListener("change", fetchTasks);
+      priorityFilterInput.addEventListener("change", fetchTasks);
       overdueFilterInput.addEventListener("change", fetchTasks);
+      clearFiltersButton.addEventListener("click", () => {
+        taskSearchInput.value = "";
+        statusFilterInput.value = "";
+        priorityFilterInput.value = "";
+        overdueFilterInput.checked = false;
+        fetchTasks();
+      });
 
       function escapeHtml(value) {
         return String(value ?? "").replace(/[&<>"']/g, (char) => {
@@ -746,7 +852,9 @@
         if (state === "empty") {
           boardStateMessage.style.background = "#f8fafc";
           boardStateMessage.style.borderColor = "#d8e2f0";
-          boardStateMessage.innerHTML = "<strong>Board is empty.</strong> No tasks yet.";
+          boardStateMessage.innerHTML = hasActiveTaskFilters()
+            ? "<strong>No matching tasks.</strong> Try clearing search or filters."
+            : "<strong>Board is empty.</strong> No tasks yet.";
           return;
         }
 
@@ -791,10 +899,33 @@
 
       function buildTasksUrl() {
         const url = new URL(`${API_BASE_URL}/tasks`);
+        const searchTerm = taskSearchInput.value.trim();
+
+        if (searchTerm) {
+          url.searchParams.set("search", searchTerm);
+        }
+
+        if (statusFilterInput.value) {
+          url.searchParams.set("status", statusFilterInput.value);
+        }
+
+        if (priorityFilterInput.value) {
+          url.searchParams.set("priority", priorityFilterInput.value);
+        }
+
         if (overdueFilterInput.checked) {
           url.searchParams.set("overdue", "true");
         }
         return url.toString();
+      }
+
+      function hasActiveTaskFilters() {
+        return Boolean(
+          taskSearchInput.value.trim() ||
+            statusFilterInput.value ||
+            priorityFilterInput.value ||
+            overdueFilterInput.checked
+        );
       }
 
       function formatDueDate(value) {
@@ -920,6 +1051,11 @@
               `<strong>Unable to move task.</strong> ${escapeHtml(detail)}`,
               "error"
             );
+            return;
+          }
+
+          if (hasActiveTaskFilters()) {
+            await fetchTasks();
             return;
           }
 

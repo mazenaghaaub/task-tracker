@@ -41,21 +41,18 @@ def get_all_tasks(
     priority: Optional[TaskPriority] = None,
     overdue: Optional[bool] = None,
     search: Optional[str] = None,
-    description: Optional[str] = None,
-    title: Optional[str] = None,
 ) -> list[TaskResponse]:
     tasks = list(_tasks.values())
 
     if search is not None:
-        tasks = _filter_by_title_or_description(tasks, search)
-
-    if description is not None:
-        tasks = _filter_by_title_or_description(tasks, description)
-
-    if title is not None:
-        title_term = title.strip().lower()
-        if title_term:
-            tasks = [t for t in tasks if title_term in (t.title or "").lower()]
+        search_term = search.strip().lower()
+        if search_term:
+            tasks = [
+                t
+                for t in tasks
+                if search_term in (t.title or "").lower()
+                or search_term in (t.description or "").lower()
+            ]
 
     if status is not None:
         tasks = [t for t in tasks if t.status == status]
@@ -64,22 +61,6 @@ def get_all_tasks(
     if overdue is not None:
         tasks = [t for t in tasks if _is_overdue(t.due_date) is overdue]
     return [_serialize_task(task) for task in tasks]
-
-
-def _filter_by_title_or_description(
-    tasks: list[TaskResponse],
-    search_term: str,
-) -> list[TaskResponse]:
-    normalized_term = search_term.strip().lower()
-    if not normalized_term:
-        return tasks
-
-    return [
-        task
-        for task in tasks
-        if normalized_term in (task.title or "").lower()
-        or normalized_term in (task.description or "").lower()
-    ]
 
 
 def get_task_by_id(task_id: str) -> Optional[TaskResponse]:
