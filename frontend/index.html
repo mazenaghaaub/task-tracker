@@ -671,6 +671,7 @@
         taskIdInput.value = "";
         taskModalTitle.textContent = "New Task";
         taskStatusInput.value = "ToDo";
+        taskStatusInput.disabled = true;
         taskPriorityInput.value = "Medium";
         taskModalOverlay.hidden = false;
         taskTitleInput.focus();
@@ -683,6 +684,7 @@
         taskIdInput.value = task.id;
         taskTitleInput.value = task.title || "";
         taskDescriptionInput.value = task.description || "";
+        taskStatusInput.disabled = false;
         taskStatusInput.value = task.status || "ToDo";
         taskPriorityInput.value = task.priority || "Medium";
         taskAssigneeInput.value = task.assignee || "";
@@ -696,6 +698,7 @@
         clearTaskFormErrors();
         taskForm.reset();
         taskIdInput.value = "";
+        taskStatusInput.disabled = false;
         modalMode = "create";
         taskModalOverlay.hidden = true;
       }
@@ -747,7 +750,7 @@
         };
         const isEditMode = modalMode === "edit" && taskIdInput.value;
         if (!isEditMode) {
-          payload.status = taskStatusInput.value;
+          payload.status = "ToDo";
         } else {
           const existingTask = tasks.find((task) => String(task.id) === String(taskIdInput.value));
           if (existingTask && existingTask.status !== taskStatusInput.value) {

@@ -38,6 +38,14 @@ This approach matches the current project size and keeps the change focused on t
 - [frontend/index.html](../frontend/index.html)
 - [backend/tests/test_tasks.py](../backend/tests/test_tasks.py)
 
+## Decision Note
+Two implementation paths were considered for the due date and overdue filter work. Option A keeps the feature focused on the existing backend/frontend structure by adding an optional due date field, deriving overdue state, and applying filtering through the current task API. Option B would take a more structured and reusable approach, but it would require additional abstractions and a broader refactor than the current stories call for. I selected Option A because it aligns with the current FastAPI-based architecture, stays within the requested scope, and keeps the behavior straightforward to test. I rejected the more elaborate approach as too complex for this iteration because it would add extra layers of indirection, more frontend/backend coordination, and broader UI state handling that is not required for the current feature set.
+
+
+
+
+
+
 ## Feature 2: Search and Combined Filters
 
 ## Status

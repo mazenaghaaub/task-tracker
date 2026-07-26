@@ -43,7 +43,7 @@ As a **team member**, I want to filter tasks to show only overdue items so that 
 4. Clearing the overdue filter returns the full task list.
 
 
-## Verification of user stories 
+## Correction of user stories 
 1. Coplit added a 5th story that looked close to Story 4
  "As a **team member**, I want task cards to display due date and overdue information so that I can understand task urgency at a glance"
 
@@ -118,7 +118,7 @@ As a **team member**, I want clearing search terms or removing filters to restor
 4. When all search terms and filters are cleared, the full task list is shown across the three board columns.  
 5. The three board columns remain visible after any search or filter is cleared.
 
-## Verification of user stories 
+## Correction of user stories 
 1. Copilot generated 5 stories
 2. Validated on Codex with the following prompt
 You are a senior developer reviewing requirements before implementation.
