@@ -13,3 +13,17 @@ This is the initial project skeleton. It includes:
 CRUD endpoints, task validation rules, and business logic (e.g. status transitions) are **not yet implemented** and will be added in a later step.
 
 ## Project Structure
+
+## Steps to run task-tracker
+check if you are at root folder: task-tracker
+
+cd backend
+
+#activate local environment
+.\venv\Scripts\Activate.ps1
+
+#start web server
+uvicorn app.main:app --reload --port 8000
+
+#check from broswer
+http://localhost:8000/index.html
