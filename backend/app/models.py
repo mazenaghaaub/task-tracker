@@ -6,7 +6,7 @@ from pydantic import BaseModel, ConfigDict, field_validator
 
 
 class TaskStatus(str, Enum):
-    TODO = "ToDo"
+    TODO = "To Do"
     IN_PROGRESS = "InProgress"
     DONE = "Done"
 
