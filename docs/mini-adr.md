@@ -1,4 +1,4 @@
-# Mini ADR — Option A: Minimal, Incremental Feature 1: Due Date
+# Mini ADR — Option A: Minimal, Incremental Feature 1: Due Date and Overdue Filter
 
 ## Status
 Proposed
